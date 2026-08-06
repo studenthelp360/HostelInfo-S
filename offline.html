@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline - Hostels Near DYPCET</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Fallback CSS standard link in case CDN fails, but we use inline style here for guaranteed offline look -->
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --text-color: #1f2937;
+      --bg-color: #ffffff;
+    }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    .offline-card {
+      max-width: 400px;
+      background: white;
+      padding: 40px 30px;
+      border-radius: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    .icon-container {
+      font-size: 4rem;
+      color: var(--primary-color);
+      margin-bottom: 20px;
+      animation: pulse 2s infinite ease-in-out;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.8; }
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+    p {
+      font-size: 0.95rem;
+      color: #6b7280;
+      margin-bottom: 25px;
+      line-height: 1.5;
+    }
+    .btn-retry {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-retry:hover {
+      background-color: #1d4ed8;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+      color: white;
+    }
+    .btn-retry:active {
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-card">
+    <div class="icon-container">📶</div>
+    <h1>You are Offline</h1>
+    <p>We can't connect to the server right now. Please check your internet connection and try reloading the page.</p>
+    <a href="index.html" class="btn-retry">Retry Connection</a>
+  </div>
+</body>
+</html>

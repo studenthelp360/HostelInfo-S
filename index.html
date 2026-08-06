@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+  <meta name="theme-color" content="#2563eb">
+  
+  <!-- SEO Meta Tags -->
+  <title>Hostels Near DYPCET - Find Boys & Girls Hostels</title>
+  <meta name="description" content="Find and filter Boys' and Girls' Hostels near D.Y. Patil College of Engineering & Technology (DYPCET), Kolhapur. Fast search, direct calling, and maps direction support.">
+  <meta name="keywords" content="DYPCET hostel, Kolhapur hostels, hostels near DYPCET, boys hostel Kolhapur, girls hostel Kolhapur, DY Patil hostels">
+  <meta name="author" content="Hostels Near DYPCET team">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Hostels Near DYPCET - Find Boys & Girls Hostels">
+  <meta property="og:description" content="Find and filter Boys' and Girls' Hostels near D.Y. Patil College of Engineering & Technology (DYPCET), Kolhapur. Fast search, direct calling, and maps direction support.">
+  <meta property="og:image" content="images/icon-512.png">
+
+  <!-- Web App Manifest & Icons -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="images/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Hostels DYPCET">
+
+  <!-- Google Fonts (Inter) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Custom PWA Install Banner -->
+  <div id="installBanner" class="container-fluid pwa-install-banner d-none my-3" role="alert">
+    <div>
+      <h2 class="h6 fw-bold mb-1">Install Hostels Near DYPCET</h2>
+      <p class="small mb-0 opacity-75">Add to home screen for offline access and direct access like a native app.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <button id="installBtn" class="pwa-install-btn">Install</button>
+      <button id="closeInstallBtn" class="pwa-close-btn" aria-label="Dismiss">&times;</button>
+    </div>
+  </div>
+
+  <!-- Student Auth Screen Overlay -->
+  <div id="authContainer" class="d-none bg-white">
+    <div class="auth-card-wrapper d-flex align-items-center justify-content-center min-vh-100 p-3">
+      <div class="card p-4 shadow-lg w-100" style="max-width: 450px; border-radius: 24px; border: 1px solid #e2e8f0;">
+        <div class="text-center mb-4">
+          <div class="fs-1 mb-2">🏠</div>
+          <h2 class="h4 fw-bold">Hostel Information</h2>
+          <div class="credits">Developed by Mahesh Shinge</div>
+          <div class="credits">Maintained by Ajinkya Nalage</div>
+        </div>
+
+        <!-- Nav tabs -->
+        <ul class="nav nav-pills nav-fill mb-3" id="authTabs" role="tablist" style="background-color: #f1f5f9; border-radius: 12px; padding: 4px;">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active py-2 rounded-3" id="login-tab" data-bs-toggle="tab" data-bs-target="#login-panel" type="button" role="tab" aria-controls="login-panel" aria-selected="true" style="font-weight: 600; font-size: 0.95rem;">Login</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link py-2 rounded-3" id="register-tab" data-bs-toggle="tab" data-bs-target="#register-panel" type="button" role="tab" aria-controls="register-panel" aria-selected="false" style="font-weight: 600; font-size: 0.95rem;">Register</button>
+          </li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content">
+          <!-- Login Pane -->
+          <div class="tab-pane fade show active" id="login-panel" role="tabpanel" aria-labelledby="login-tab">
+            <form id="loginForm">
+              <div class="mb-3">
+                <label for="loginName" class="form-label fw-semibold small text-start d-block">Student Name</label>
+                <input type="text" class="form-control form-control-lg" id="loginName" required placeholder="Enter name used in registration...">
+              </div>
+              <div class="mb-3">
+                <label for="loginMobile" class="form-label fw-semibold small text-start d-block">Mobile Number</label>
+                <input type="tel" class="form-control form-control-lg" id="loginMobile" required placeholder="Enter 10-digit mobile number..." pattern="\d{10}">
+              </div>
+              <button type="submit" class="btn btn-primary btn-action w-100 mt-2" style="border-radius: 12px; min-height: 48px; font-weight: 600;">Login</button>
+            </form>
+          </div>
+          
+          <!-- Register Pane -->
+          <div class="tab-pane fade" id="register-panel" role="tabpanel" aria-labelledby="register-tab">
+            <form id="regForm">
+              <div class="mb-3">
+                <label for="regName" class="form-label fw-semibold small text-start d-block">Full Name</label>
+                <input type="text" class="form-control form-control-lg" id="regName" required placeholder="Enter your full name...">
+              </div>
+              <div class="mb-3">
+                <label for="regMobile" class="form-label fw-semibold small text-start d-block">Mobile Number</label>
+                <input type="tel" class="form-control form-control-lg" id="regMobile" required placeholder="Enter 10-digit mobile number..." pattern="\d{10}">
+              </div>
+              <button type="submit" class="btn btn-primary btn-action w-100 mt-2" style="border-radius: 12px; min-height: 48px; font-weight: 600;">Register</button>
+            </form>
+            <div id="regFeedback" class="d-none"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App Shell -->
+  <div id="appMainContainer" class="d-none">
+    <div class="app-container">
+      <header class="position-relative">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span id="studentWelcomeBanner" class="badge bg-light text-primary border p-2 fw-semibold"></span>
+          <button id="studentLogoutBtn" class="btn btn-sm btn-outline-danger" style="border-radius: 8px; font-weight:600;">Logout</button>
+        </div>
+        <h1 id="appTitle">🏠 Hostels Information</h1>
+        <div class="credits">Developed by Mahesh Shinge</div>
+        <div class="credits">Maintained by Ajinkya Nalage</div>
+      </header>
+
+    <!-- Search & Filter Card -->
+    <main>
+      <section aria-labelledby="appTitle">
+        <div class="search-filter-card">
+          <div class="row g-3">
+            <!-- Search Hostels -->
+            <div class="col-12">
+              <label for="searchInput" class="form-label">Search</label>
+              <input 
+                type="search" 
+                id="searchInput" 
+                class="form-control form-control-lg" 
+                placeholder="Search hostel by name..." 
+                aria-label="Search hostels by name"
+              >
+            </div>
+            
+            <!-- Gender Filter -->
+            <div class="col-6">
+              <label for="genderFilter" class="form-label">Gender</label>
+              <select id="genderFilter" class="form-select form-select-lg" aria-label="Filter by gender">
+                <option value="All">All</option>
+              </select>
+            </div>
+
+            <!-- Area Filter -->
+            <div class="col-6">
+              <label for="areaFilter" class="form-label">Area</label>
+              <select id="areaFilter" class="form-select form-select-lg" aria-label="Filter by area">
+                <option value="All Areas">All Areas</option>
+              </select>
+            </div>
+
+            <!-- Clear Filters Button -->
+            <div class="col-12 mt-4">
+              <button id="clearFiltersBtn" class="btn-clear" aria-label="Reset search and filters">
+                导 Clear Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Results Indicator -->
+      <div class="results-count" aria-live="polite">
+        Showing <span id="resultsCount" class="badge">0</span> Hostels
+      </div>
+
+      <!-- Error State fallback -->
+      <div id="errorContainer" class="error-state" style="display: none;" role="alert">
+        <div class="error-state-icon">⚠️</div>
+        <h2 class="h5 fw-bold mb-2">Unable to load hostel data.</h2>
+        <p class="mb-3">Please check your network and try again later.</p>
+        <button id="retryBtn" class="btn-retry-error" aria-label="Retry loading data">
+          🔄 Retry Loading
+        </button>
+      </div>
+
+      <!-- Hostels Card Grid -->
+      <section aria-label="Hostel listings">
+        <div id="hostelsContainer" class="hostel-grid">
+          <!-- Dynamically populated card listings or skeletons go here -->
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+  <!-- Floating Refresh Action Button -->
+  <button id="refreshBtn" class="btn-refresh-fab" aria-label="Refresh latest data" title="Refresh Latest Data" onclick="loadData(true)">
+    🔄
+  </button>
+
+  <!-- Bootstrap 5 Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Supabase JS Client Library CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Core App Modules (Vanilla ES6 Modules) -->
+  <script type="module" src="config.js"></script>
+  <script type="module" src="utils.js"></script>
+  <script type="module" src="auth.js"></script>
+  <script type="module" src="student.js"></script>
+  <script type="module" src="script.js"></script>
+</body>
+</html>

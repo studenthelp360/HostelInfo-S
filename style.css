@@ -1,0 +1,467 @@
+/* Custom Styling for Hostels Near DYPCET */
+
+:root {
+  --primary-color: #2563eb;       /* Sleek accent blue */
+  --primary-hover: #1d4ed8;
+  --call-color: #10b981;          /* Green for Call button */
+  --call-hover: #059669;
+  --map-color: #3b82f6;           /* Blue for Map button */
+  --map-hover: #2563eb;
+  --bg-color: #ffffff;            /* White background */
+  --card-bg: #ffffff;
+  --text-dark: #1e293b;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.1);
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Base Styles */
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  color: var(--text-dark);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Container spacing */
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 5rem 1rem; /* Bottom padding for FAB space */
+}
+
+/* Header Section */
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-top: 1rem;
+}
+
+header h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  letter-spacing: -0.025em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+header .credits, .credits {
+  font-size: 0.8rem;
+  color: #dc2626 !important;
+  font-weight: 700 !important;
+  line-height: 1.4;
+}
+
+/* Search and Filters Card */
+.search-filter-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 2rem;
+  transition: box-shadow 0.3s ease;
+}
+
+.search-filter-card:focus-within {
+  box-shadow: var(--shadow-md);
+}
+
+.form-control-lg, .form-select-lg {
+  font-size: 1rem;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-color);
+  padding: 0.75rem 1rem;
+  background-color: #f8fafc;
+  transition: all 0.2s ease-in-out;
+  color: var(--text-dark);
+}
+
+.form-control-lg:focus, .form-select-lg:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  background-color: #ffffff;
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+}
+
+/* Clear Filters Button */
+.btn-clear {
+  color: var(--primary-color);
+  background: transparent;
+  border: 1px dashed var(--primary-color);
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  width: 100%;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-clear:hover {
+  background-color: rgba(37, 99, 235, 0.05);
+  color: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+/* Results Count */
+.results-count {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.results-count .badge {
+  background-color: rgba(37, 99, 235, 0.1);
+  color: var(--primary-color);
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.35em 0.65em;
+  border-radius: 8px;
+}
+
+/* Grid Layout */
+.hostel-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media (min-width: 576px) {
+  .hostel-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 992px) {
+  .hostel-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Hostel Card */
+.hostel-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.hostel-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.hostel-img-wrapper {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background-color: #f1f5f9;
+}
+
+.hostel-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.hostel-card:hover img {
+  transform: scale(1.03);
+}
+
+.hostel-card-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  justify-content: space-between;
+}
+
+.hostel-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 0.4rem;
+  line-height: 1.3;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hostel-owner {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.gender-icon {
+  font-size: 1.25rem;
+}
+
+/* Buttons inside Card */
+.card-buttons-container {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn-action {
+  flex: 1;
+  border: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: white;
+  min-height: 48px; /* Touch target accessibility rule */
+}
+
+.btn-call {
+  background-color: var(--call-color);
+}
+
+.btn-call:hover {
+  background-color: var(--call-hover);
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.btn-map {
+  background-color: var(--map-color);
+}
+
+.btn-map:hover {
+  background-color: var(--map-hover);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+/* Floating Refresh Button */
+.btn-refresh-fab {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  z-index: 1000;
+  transition: all 0.2s ease, transform 0.5s ease;
+  cursor: pointer;
+  outline: none;
+}
+
+.btn-refresh-fab:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px) scale(1.05);
+}
+
+.btn-refresh-fab:active {
+  transform: translateY(0) scale(0.95);
+}
+
+/* Refresh Animation */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.btn-refresh-fab.loading {
+  animation: spin 1s linear infinite;
+  pointer-events: none;
+}
+
+/* Dynamic State Messages */
+.empty-state, .error-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background-color: #f8fafc;
+  border-radius: 20px;
+  border: 1px dashed var(--border-color);
+  margin-top: 2rem;
+}
+
+.empty-state-icon, .error-state-icon {
+  font-size: 3rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.error-state {
+  border-color: #fecaca;
+  background-color: #fef2f2;
+}
+
+.error-state-icon {
+  color: #ef4444;
+}
+
+.error-state p {
+  color: #991b1b;
+}
+
+.btn-retry-error {
+  margin-top: 1rem;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.btn-retry-error:hover {
+  background-color: #dc2626;
+}
+
+/* Loading Skeleton */
+.skeleton-card {
+  height: 320px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Install Banner (PWA prompt custom support if needed) */
+.pwa-install-banner {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.pwa-install-btn {
+  background-color: #ffffff;
+  color: var(--primary-color);
+  font-weight: 700;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.pwa-install-btn:hover {
+  background-color: #f1f5f9;
+  transform: translateY(-1px);
+}
+
+.pwa-close-btn {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  padding: 0.2rem 0.5rem;
+}
+
+.pwa-close-btn:hover {
+  color: white;
+}
+
+/* Image Fade-In Animation */
+.img-lazy {
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Student Auth Screen Overlay */
+#authContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1500;
+  overflow-y: auto;
+  background-color: #ffffff;
+}
+
+.auth-card-wrapper {
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+/* Nav Pills Auth styling overrides */
+#authTabs .nav-link {
+  color: #64748b;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+#authTabs .nav-link.active {
+  background-color: #ffffff;
+  color: #2563eb;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Badge styling */
+#studentWelcomeBanner {
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+}
