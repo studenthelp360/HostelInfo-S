@@ -294,26 +294,14 @@ export async function approveStudent(studentId) {
 
     if (updateError) throw updateError;
 
-    // Successful update: Remove row
-    if (targetRow) {
-      targetRow.remove();
-      if (pendingTbody.children.length === 0) {
-        pendingTbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No pending registrations found.</td></tr>`;
-      }
-    }
+    // Wait for all refresh operations to complete
+    await Promise.all([
+      loadPendingApprovals(),
+      loadAllStudentsFromServer(),
+      loadStatistics()
+    ]);
+
     showToast("Student Approved Successfully", "success");
-
-    // Asynchronously refresh stats card
-    setTimeout(loadStatistics, 50);
-
-    // Update in cached students array if present
-    const cachedStudent = allStudentsList.find(s => s.student_id === studentId);
-    if (cachedStudent) {
-      cachedStudent.status = 'Approved';
-      cachedStudent.approval_date = todayStr;
-      cachedStudent.expiry_date = expiryStr;
-      applyLocalFilters();
-    }
   } catch (err) {
     logError("approveStudent", err);
     // Rollback UI
@@ -383,23 +371,14 @@ async function submitStudentRejection() {
 
     if (error) throw error;
 
-    if (targetRow) {
-      targetRow.remove();
-      if (pendingTbody.children.length === 0) {
-        pendingTbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No pending registrations found.</td></tr>`;
-      }
-    }
+    // Wait for all refresh operations to complete
+    await Promise.all([
+      loadPendingApprovals(),
+      loadAllStudentsFromServer(),
+      loadStatistics()
+    ]);
+
     showToast("Registration Rejected", "warning");
-
-    // Asynchronously refresh stats
-    setTimeout(loadStatistics, 50);
-
-    const cachedStudent = allStudentsList.find(s => s.student_id === studentId);
-    if (cachedStudent) {
-      cachedStudent.status = 'Rejected';
-      cachedStudent.remarks = remarks || 'Rejected by administrator';
-      applyLocalFilters();
-    }
   } catch (err) {
     logError("submitStudentRejection", err);
     if (targetRow && originalHtml) {
@@ -509,23 +488,14 @@ export async function reapproveStudent(studentId) {
 
     if (error) throw error;
 
-    if (targetRow) {
-      targetRow.remove();
-      if (expiredTbody.children.length === 0) {
-        expiredTbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No expired accounts found.</td></tr>`;
-      }
-    }
+    // Wait for all refresh operations to complete
+    await Promise.all([
+      loadExpiredApprovals(),
+      loadAllStudentsFromServer(),
+      loadStatistics()
+    ]);
+
     showToast("Student Re-approved Successfully", "success");
-
-    setTimeout(loadStatistics, 50);
-
-    const cachedStudent = allStudentsList.find(s => s.student_id === studentId);
-    if (cachedStudent) {
-      cachedStudent.status = 'Approved';
-      cachedStudent.approval_date = todayStr;
-      cachedStudent.expiry_date = expiryStr;
-      applyLocalFilters();
-    }
   } catch (err) {
     logError("reapproveStudent", err);
     if (targetRow && originalHtml) {
@@ -742,12 +712,15 @@ async function submitStudentDeletion() {
       .eq('student_id', studentId);
 
     if (error) throw error;
-    toggleLoader(false);
 
+    await Promise.all([
+      loadAllStudentsFromServer(),
+      loadStatistics()
+    ]);
+
+    toggleLoader(false);
     if (targetRow) targetRow.remove();
     showToast("Student Record Deleted Successfully", "danger");
-
-    setTimeout(loadStatistics, 50);
   } catch (err) {
     toggleLoader(false);
     logError("submitStudentDeletion", err);
