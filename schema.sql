@@ -63,7 +63,7 @@ create table if not exists audit_logs (
   admin_email text not null,
   student_id text not null,
   student_name text not null,
-  action text not null check (action in ('Approve', 'Reject', 'Reapprove', 'Delete')),
+  action text not null check (action in ('Approve', 'Reject', 'Reapprove', 'Delete', 'Expired')),
   action_details text,
   created_at timestamptz not null default now()
 );
