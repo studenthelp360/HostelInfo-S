@@ -123,9 +123,20 @@ function setupAdminEventListeners() {
         } else {
           applyLocalFilters();
         }
+      } else if (tabId === 'hostels-tab') {
+        loadHostelsFromServer();
+      } else if (tabId === 'settings-tab') {
+        loadSettingsData();
       }
     });
   });
+
+  const hostelSearch = document.getElementById('hostelSearchInput');
+  if (hostelSearch) {
+    hostelSearch.addEventListener('input', () => {
+      applyHostelFilters();
+    });
+  }
 }
 
 // Concurrently retrieve statistics and pending registrations
@@ -798,3 +809,736 @@ window.reapproveStudent = reapproveStudent;
 window.viewStudentDetails = viewStudentDetails;
 window.openDeleteModal = openDeleteModal;
 window.changeAllStudentsPage = changeAllStudentsPage;
+
+// =========================================================================
+// HOSTEL MANAGEMENT & AREA SETTINGS EXTENSIONS (V3 CRUD)
+// =========================================================================
+
+// State variables for hostels and settings
+let allHostelsList = [];
+let filteredHostelsList = [];
+let selectedHostelId = null;
+let optimizedImageFile = null;
+
+let globalSettings = null;
+let areasList = [];
+let editAreaIndex = -1;
+
+// A. --- SETTINGS & AREAS CORE LOGIC ---
+
+// Fetch expiry days and dynamic area list from settings
+export async function loadSettingsData() {
+  toggleLoader(true, "Loading settings configuration...");
+  try {
+    // 1. Get global settings record (excluding areas row)
+    const { data: globalRow, error: gError } = await supabaseClient
+      .from('settings')
+      .select('*')
+      .neq('expiry_days', -1)
+      .limit(1)
+      .maybeSingle();
+
+    if (gError) throw gError;
+    if (globalRow) {
+      globalSettings = globalRow;
+      const expInput = document.getElementById('settingsExpiryDays');
+      if (expInput) expInput.value = globalRow.expiry_days;
+    }
+
+    // 2. Fetch whitelist area rows
+    areasList = await loadSettingsAreas();
+    renderAreasTable();
+    populateHostelAreaDropdown();
+    toggleLoader(false);
+  } catch (err) {
+    toggleLoader(false);
+    logError("loadSettingsData", err);
+    showToast("Failed to fetch settings parameters.", "danger");
+  }
+}
+
+// Read areas list from separate settings records where expiry_days = -1
+export async function loadSettingsAreas() {
+  try {
+    const { data: records, error } = await supabaseClient
+      .from('settings')
+      .select('website_name')
+      .eq('expiry_days', -1);
+
+    if (error) throw error;
+
+    if (!records || records.length === 0) {
+      // Default areas fallback
+      const defaultAreas = ["Kasaba Bawada", "Tarabai Park", "Ruikar Colony", "Nagala Park", "Line Bazar"];
+      for (const area of defaultAreas) {
+        await supabaseClient.from('settings').insert({
+          expiry_days: -1,
+          website_name: area,
+          maintenance_mode: false
+        });
+      }
+      return defaultAreas;
+    }
+
+    return records.map(r => r.website_name.trim()).filter(Boolean);
+  } catch (err) {
+    logError("loadSettingsAreas", err);
+    return ["Kasaba Bawada", "Tarabai Park", "Ruikar Colony", "Nagala Park", "Line Bazar"];
+  }
+}
+
+// Add New Area record
+export async function handleAddArea() {
+  const input = document.getElementById('newAreaName');
+  if (!input) return;
+
+  const name = input.value.trim();
+  if (!name) {
+    showToast("Area name cannot be empty.", "warning");
+    return;
+  }
+  if (areasList.includes(name)) {
+    showToast("This location name already exists.", "warning");
+    return;
+  }
+
+  toggleLoader(true, "Adding location area...");
+  try {
+    const { error } = await supabaseClient
+      .from('settings')
+      .insert({
+        expiry_days: -1,
+        website_name: name,
+        maintenance_mode: false
+      });
+
+    if (error) throw error;
+
+    areasList.push(name);
+    input.value = '';
+    renderAreasTable();
+    populateHostelAreaDropdown();
+    showToast("Location added successfully.", "success");
+    toggleLoader(false);
+  } catch (err) {
+    toggleLoader(false);
+    logError("handleAddArea", err);
+    showToast("Failed to add location: " + err.message, "danger");
+  }
+}
+
+// Open Area Edit dialog
+export function openEditAreaModal(index) {
+  editAreaIndex = index;
+  const name = areasList[index];
+
+  const idxInput = document.getElementById('editAreaOldIndex');
+  const nameInput = document.getElementById('editAreaNameInput');
+  if (idxInput) idxInput.value = index;
+  if (nameInput) nameInput.value = name;
+
+  if (!editAreaModalInstance) {
+    editAreaModalInstance = new bootstrap.Modal(document.getElementById('editAreaModal'));
+  }
+  editAreaModalInstance.show();
+}
+
+// Submit edited area name
+export async function submitEditArea() {
+  const nameInput = document.getElementById('editAreaNameInput');
+  if (!nameInput || editAreaIndex === -1) return;
+
+  const newName = nameInput.value.trim();
+  if (!newName) {
+    showToast("Location name cannot be empty.", "warning");
+    return;
+  }
+
+  const oldName = areasList[editAreaIndex];
+  if (oldName === newName) {
+    if (editAreaModalInstance) editAreaModalInstance.hide();
+    return;
+  }
+
+  if (areasList.includes(newName)) {
+    showToast("This location name already exists.", "warning");
+    return;
+  }
+
+  if (editAreaModalInstance) editAreaModalInstance.hide();
+  toggleLoader(true, "Renaming location...");
+
+  try {
+    const { error } = await supabaseClient
+      .from('settings')
+      .update({ website_name: newName })
+      .eq('expiry_days', -1)
+      .eq('website_name', oldName);
+
+    if (error) throw error;
+
+    areasList[editAreaIndex] = newName;
+    renderAreasTable();
+    populateHostelAreaDropdown();
+    showToast("Location updated successfully.", "success");
+    toggleLoader(false);
+  } catch (err) {
+    toggleLoader(false);
+    logError("submitEditArea", err);
+    showToast("Failed to rename location: " + err.message, "danger");
+  }
+}
+
+// Delete Area name
+export async function handleDeleteArea(index) {
+  const name = areasList[index];
+  if (!confirm(`Are you sure you want to delete the location "${name}"?`)) {
+    return;
+  }
+
+  toggleLoader(true, "Deleting location...");
+  try {
+    const { error } = await supabaseClient
+      .from('settings')
+      .delete()
+      .eq('expiry_days', -1)
+      .eq('website_name', name);
+
+    if (error) throw error;
+
+    areasList.splice(index, 1);
+    renderAreasTable();
+    populateHostelAreaDropdown();
+    showToast("Location deleted successfully.", "success");
+    toggleLoader(false);
+  } catch (err) {
+    toggleLoader(false);
+    logError("handleDeleteArea", err);
+    showToast("Failed to delete location: " + err.message, "danger");
+  }
+}
+
+// Save Expiry Days change
+export async function saveExpiryDays() {
+  const expInput = document.getElementById('settingsExpiryDays');
+  if (!expInput) return;
+
+  const value = parseInt(expInput.value, 10);
+  if (isNaN(value) || value < 1 || value > 365) {
+    showToast("Please enter a valid expiry offset between 1 and 365 days.", "warning");
+    return;
+  }
+
+  toggleLoader(true, "Updating expiry settings...");
+  try {
+    const idToUpdate = globalSettings ? globalSettings.id : undefined;
+    const { error } = await supabaseClient
+      .from('settings')
+      .upsert({
+        id: idToUpdate,
+        expiry_days: value,
+        website_name: globalSettings ? globalSettings.website_name : 'Hostels Near DYPCET',
+        maintenance_mode: globalSettings ? globalSettings.maintenance_mode : false
+      });
+
+    if (error) throw error;
+    showToast("Expiry days updated successfully.", "success");
+    toggleLoader(false);
+  } catch (err) {
+    toggleLoader(false);
+    logError("saveExpiryDays", err);
+    showToast("Failed to update settings: " + err.message, "danger");
+  }
+}
+
+// Render dynamic areas list table
+function renderAreasTable() {
+  const tbody = document.getElementById('areasTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  if (areasList.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="2" class="text-center text-muted py-2 small">No locations configured.</td></tr>`;
+    return;
+  }
+
+  areasList.forEach((area, index) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${area}</td>
+      <td class="text-end">
+        <button class="btn btn-sm btn-outline-primary py-0 px-2 small me-1" onclick="openEditAreaModal(${index})">Edit</button>
+        <button class="btn btn-sm btn-outline-danger py-0 px-2 small" onclick="handleDeleteArea(${index})">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Populate Add/Edit hostel location dropdown
+function populateHostelAreaDropdown() {
+  const dropdown = document.getElementById('hostelAreaInput');
+  if (!dropdown) return;
+  
+  dropdown.innerHTML = '';
+  areasList.forEach(area => {
+    const opt = document.createElement('option');
+    opt.value = area;
+    opt.textContent = area;
+    dropdown.appendChild(opt);
+  });
+}
+
+// B. --- HOSTEL CRUD LOGIC ---
+
+// Fetch hostels from database
+export async function loadHostelsFromServer() {
+  const tbody = document.getElementById('hostelsTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4"><div class="spinner-border text-primary spinner-border-sm" role="status"></div> Loading hostels...</td></tr>`;
+
+  try {
+    const { data: hostels, error } = await supabaseClient
+      .from('hostels')
+      .select('*')
+      .order('hostel_name', { ascending: true });
+
+    if (error) throw error;
+
+    allHostelsList = hostels;
+    applyHostelFilters();
+  } catch (err) {
+    logError("loadHostelsFromServer", err);
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">Failed to load hostels list.</td></tr>`;
+  }
+}
+
+// Local Search Filters (under 10ms execution)
+export function applyHostelFilters() {
+  const query = document.getElementById('hostelSearchInput').value.trim().toLowerCase();
+  
+  filteredHostelsList = allHostelsList.filter(hostel => {
+    return !query || 
+      hostel.hostel_name.toLowerCase().includes(query) ||
+      hostel.owner_name.toLowerCase().includes(query) ||
+      hostel.area.toLowerCase().includes(query);
+  });
+
+  renderHostelsTable();
+}
+
+// Render dynamic hostels table list
+function renderHostelsTable() {
+  const tbody = document.getElementById('hostelsTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  if (filteredHostelsList.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No matching hostels found.</td></tr>`;
+    return;
+  }
+
+  filteredHostelsList.forEach(hostel => {
+    // Show placeholder if photo is null or empty
+    const imgUrl = hostel.photo || 'images/placeholder.jpg';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <img src="${imgUrl}" alt="${hostel.hostel_name}" style="width: 48px; height: 48px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0;" onerror="this.onerror=null; this.src='images/placeholder.jpg';">
+      </td>
+      <td><strong>${hostel.hostel_name}</strong></td>
+      <td>${hostel.owner_name}</td>
+      <td>${hostel.gender}</td>
+      <td>${hostel.area}</td>
+      <td>${hostel.phone}</td>
+      <td class="text-center">
+        <button class="btn btn-outline-primary btn-action-sm me-1" onclick="openEditHostelModal('${hostel.id}')">Edit</button>
+        <button class="btn btn-outline-danger btn-action-sm" onclick="openDeleteHostelModal('${hostel.id}', '${hostel.hostel_name}')">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Open Add Hostel popup modal
+export function openAddHostelModal() {
+  selectedHostelId = null;
+  optimizedImageFile = null;
+
+  document.getElementById('hostelModalLabel').textContent = 'Add Hostel';
+  const form = document.getElementById('hostelForm');
+  if (form) form.reset();
+
+  document.getElementById('hostelId').value = '';
+  document.getElementById('imagePreviewContainer').classList.add('d-none');
+  document.getElementById('hostelImagePreview').src = '';
+
+  // Synchronize dynamic Area dropdown list
+  populateHostelAreaDropdown();
+
+  if (!hostelModalInstance) {
+    hostelModalInstance = new bootstrap.Modal(document.getElementById('hostelModal'));
+  }
+  hostelModalInstance.show();
+}
+
+// Open Edit Hostel popup modal
+export function openEditHostelModal(hostelId) {
+  const hostel = allHostelsList.find(h => h.id === hostelId);
+  if (!hostel) return;
+
+  selectedHostelId = hostelId;
+  optimizedImageFile = null;
+
+  document.getElementById('hostelModalLabel').textContent = 'Edit Hostel';
+  document.getElementById('hostelId').value = hostelId;
+  document.getElementById('hostelNameInput').value = hostel.hostel_name;
+  document.getElementById('hostelOwnerInput').value = hostel.owner_name;
+  document.getElementById('hostelGenderInput').value = hostel.gender;
+  document.getElementById('hostelPhoneInput').value = hostel.phone;
+  document.getElementById('hostelMapsInput').value = hostel.maps;
+  document.getElementById('hostelDescriptionInput').value = hostel.description || '';
+  
+  // Set up Area list options and select match
+  populateHostelAreaDropdown();
+  document.getElementById('hostelAreaInput').value = hostel.area;
+
+  const preview = document.getElementById('hostelImagePreview');
+  const container = document.getElementById('imagePreviewContainer');
+  if (hostel.photo) {
+    preview.src = hostel.photo;
+    container.classList.remove('d-none');
+  } else {
+    preview.src = '';
+    container.classList.add('d-none');
+  }
+
+  const fileInput = document.getElementById('hostelPhotoInput');
+  if (fileInput) fileInput.value = '';
+
+  if (!hostelModalInstance) {
+    hostelModalInstance = new bootstrap.Modal(document.getElementById('hostelModal'));
+  }
+  hostelModalInstance.show();
+}
+
+// Preview and validate uploaded files
+export async function previewHostelImage(event) {
+  const file = event.target.files[0];
+  const container = document.getElementById('imagePreviewContainer');
+  const preview = document.getElementById('hostelImagePreview');
+  
+  if (!file) {
+    optimizedImageFile = null;
+    preview.src = '';
+    container.classList.add('d-none');
+    return;
+  }
+
+  // 1. Validation checks
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  if (!allowedTypes.includes(file.type)) {
+    showToast("Only JPG, JPEG, PNG and WEBP images are allowed.", "danger");
+    event.target.value = '';
+    optimizedImageFile = null;
+    preview.src = '';
+    container.classList.add('d-none');
+    return;
+  }
+
+  const maxSize = 5 * 1024 * 1024; // 5 MB
+  if (file.size > maxSize) {
+    showToast("Image size must be less than 5 MB.", "danger");
+    event.target.value = '';
+    optimizedImageFile = null;
+    preview.src = '';
+    container.classList.add('d-none');
+    return;
+  }
+
+  // Show a local temporary preview immediately before canvas optimization
+  preview.src = URL.createObjectURL(file);
+  container.classList.remove('d-none');
+
+  // 2. Local Preview and scale image asynchronously via Canvas
+  try {
+    toggleLoader(true, "Optimizing image file...");
+    const resized = await resizeImage(file);
+    optimizedImageFile = resized;
+    
+    // Revoke old blob and assign optimized preview
+    URL.revokeObjectURL(preview.src);
+    preview.src = URL.createObjectURL(resized);
+    toggleLoader(false);
+  } catch (err) {
+    toggleLoader(false);
+    logError("previewHostelImage", err);
+    showToast("Failed to optimize image: " + err.message, "danger");
+  }
+}
+
+// Resize image with custom Canvas scale constraints (under 1600px width, 85% JPEG)
+async function resizeImage(file, maxWidth = 1600) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(img.src);
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const nameWithoutExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+          const resizedFile = new File([blob], `${nameWithoutExt}.jpg`, {
+            type: 'image/jpeg',
+            lastModified: Date.now()
+          });
+          resolve(resizedFile);
+        } else {
+          reject(new Error("Canvas blob conversion failed."));
+        }
+      }, 'image/jpeg', 0.85); // Compress quality to 85% JPEG
+    };
+    img.onerror = (err) => reject(err);
+  });
+}
+
+// Upload file to storage with upload progress feedback
+async function uploadStorageFile(file) {
+  const fileExt = 'jpg'; // We always compress to jpeg inside resizeImage
+  const fileName = `hostel_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+  const filePath = fileName;
+
+  const { error } = await supabaseClient.storage
+    .from('hostel-photos')
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false,
+      onUploadProgress: (progress) => {
+        const percent = Math.round((progress.loaded / progress.total) * 100);
+        toggleLoader(true, `Uploading image (${percent}%)...`);
+      }
+    });
+
+  if (error) throw error;
+
+  const { data: { publicUrl } } = supabaseClient.storage
+    .from('hostel-photos')
+    .getPublicUrl(filePath);
+
+  return publicUrl;
+}
+
+// Submit Add/Edit Hostel form
+export async function handleHostelSubmit(e) {
+  e.preventDefault();
+  
+  const name = document.getElementById('hostelNameInput').value.trim();
+  const owner = document.getElementById('hostelOwnerInput').value.trim();
+  const gender = document.getElementById('hostelGenderInput').value;
+  const area = document.getElementById('hostelAreaInput').value;
+  const phone = document.getElementById('hostelPhoneInput').value.trim();
+  const maps = document.getElementById('hostelMapsInput').value.trim();
+  const description = document.getElementById('hostelDescriptionInput').value.trim();
+
+  // 1. Phone number validation (10 digits, stripped of separators)
+  const cleanPhone = phone.replace(/^\+91/, '').replace(/^0/, '').replace(/\s+/g, '').replace(/[\-\(\)]/g, '');
+  if (!/^\d{10}$/.test(cleanPhone)) {
+    showToast("Phone number must be a valid 10-digit number.", "danger");
+    return;
+  }
+
+  // 2. Google Maps URL validation
+  let validMap = false;
+  try {
+    const parsed = new URL(maps);
+    const host = parsed.hostname.toLowerCase();
+    validMap = (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
+               (host.includes('maps.google.') || 
+                (host.includes('google.com') && parsed.pathname.includes('/maps')) ||
+                host === 'maps.app.goo.gl' || 
+                host === 'goo.gl');
+  } catch (e) {
+    validMap = false;
+  }
+  if (!validMap) {
+    showToast("Please enter a valid Google Maps link (e.g. maps.app.goo.gl).", "danger");
+    return;
+  }
+
+  // 3. Duplicate hostel check (Name and Phone)
+  const isDuplicate = allHostelsList.some(h => 
+    h.id !== selectedHostelId && 
+    (h.hostel_name.trim().toLowerCase() === name.toLowerCase() || h.phone.trim() === phone)
+  );
+  if (isDuplicate) {
+    showToast("A hostel with this name or phone number already exists.", "danger");
+    return;
+  }
+
+  if (hostelModalInstance) hostelModalInstance.hide();
+  toggleLoader(true, "Saving hostel details...");
+
+  try {
+    let photoUrl = null;
+    const currentHostel = selectedHostelId ? allHostelsList.find(h => h.id === selectedHostelId) : null;
+    
+    // Use existing photo URL if no new file is uploaded
+    if (currentHostel) {
+      photoUrl = currentHostel.photo;
+    }
+
+    // Upload new image if present
+    if (optimizedImageFile) {
+      // If updating, delete the old file from Storage first
+      if (currentHostel && currentHostel.photo) {
+        const oldFileName = currentHostel.photo.split('/').pop();
+        if (oldFileName && !oldFileName.includes('placeholder')) {
+          await supabaseClient.storage.from('hostel-photos').remove([oldFileName]).catch(e => {
+            console.warn("Failed to delete older file during overwrite cleanup:", e);
+          });
+        }
+      }
+      photoUrl = await uploadStorageFile(optimizedImageFile);
+    }
+
+    const payload = {
+      hostel_name: name,
+      owner_name: owner,
+      gender: gender,
+      area: area,
+      phone: phone,
+      maps: maps,
+      photo: photoUrl,
+      description: description
+    };
+
+    if (selectedHostelId) {
+      // Update
+      const { error } = await supabaseClient
+        .from('hostels')
+        .update(payload)
+        .eq('id', selectedHostelId);
+
+      if (error) throw error;
+      showToast("Hostel updated successfully.", "success");
+    } else {
+      // Insert
+      const { error } = await supabaseClient
+        .from('hostels')
+        .insert([payload]);
+
+      if (error) throw error;
+      showToast("Hostel added successfully.", "success");
+    }
+
+    // Refresh hostels grid and statistics counts
+    await loadHostelsFromServer();
+    setTimeout(loadStatistics, 50);
+    toggleLoader(false);
+  } catch (err) {
+    toggleLoader(false);
+    logError("handleHostelSubmit", err);
+    showToast("Failed to save hostel details: " + err.message, "danger");
+  }
+}
+
+// Open Delete Hostel Modal
+export function openDeleteHostelModal(hostelId, name) {
+  selectedHostelId = hostelId;
+  const span = document.getElementById('deleteHostelNameSpan');
+  if (span) span.textContent = name;
+
+  const chk = document.getElementById('confirmPermanentDeleteCheck');
+  const btn = document.getElementById('confirmDeleteHostelBtn');
+  if (chk) chk.checked = false;
+  if (btn) btn.disabled = true;
+
+  if (!deleteHostelModalInstance) {
+    deleteHostelModalInstance = new bootstrap.Modal(document.getElementById('deleteHostelConfirmModal'));
+  }
+  deleteHostelModalInstance.show();
+}
+
+// Confirm Delete Hostel
+export async function submitHostelDeletion() {
+  if (!selectedHostelId) return;
+  const hostelId = selectedHostelId;
+
+  if (deleteHostelModalInstance) deleteHostelModalInstance.hide();
+  toggleLoader(true, "Deleting hostel record...");
+
+  try {
+    const currentHostel = allHostelsList.find(h => h.id === hostelId);
+
+    // 1. Delete record from hostels database table
+    const { error: dbError } = await supabaseClient
+      .from('hostels')
+      .delete()
+      .eq('id', hostelId);
+
+    if (dbError) throw dbError;
+
+    // 2. Clean up file inside storage bucket if present
+    if (currentHostel && currentHostel.photo) {
+      const fileName = currentHostel.photo.split('/').pop();
+      if (fileName && !fileName.includes('placeholder')) {
+        const { error: stError } = await supabaseClient.storage
+          .from('hostel-photos')
+          .remove([fileName]);
+
+        if (stError) {
+          console.warn("Storage cleanup failed during record deletion:", stError);
+        }
+      }
+    }
+
+    showToast("Hostel deleted successfully.", "danger");
+    await loadHostelsFromServer();
+    setTimeout(loadStatistics, 50);
+    toggleLoader(false);
+  } catch (err) {
+    toggleLoader(false);
+    logError("submitHostelDeletion", err);
+    showToast("Failed to delete hostel: " + err.message, "danger");
+  }
+}
+
+// Toggle Hostel Delete button status based on permanent checkbox check state
+export function toggleHostelDeleteButton() {
+  const chk = document.getElementById('confirmPermanentDeleteCheck');
+  const btn = document.getElementById('confirmDeleteHostelBtn');
+  if (chk && btn) {
+    btn.disabled = !chk.checked;
+  }
+}
+
+// Bind V3 methods to window context for inline onclick triggers
+window.openAddHostelModal = openAddHostelModal;
+window.openEditHostelModal = openEditHostelModal;
+window.previewHostelImage = previewHostelImage;
+window.handleHostelSubmit = handleHostelSubmit;
+window.openDeleteHostelModal = openDeleteHostelModal;
+window.submitHostelDeletion = submitHostelDeletion;
+window.toggleHostelDeleteButton = toggleHostelDeleteButton;
+
+window.loadSettingsData = loadSettingsData;
+window.saveExpiryDays = saveExpiryDays;
+window.handleAddArea = handleAddArea;
+window.openEditAreaModal = openEditAreaModal;
+window.submitEditArea = submitEditArea;
+window.handleDeleteArea = handleDeleteArea;
+

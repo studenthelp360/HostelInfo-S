@@ -163,6 +163,16 @@
             All Students
           </button>
         </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="hostels-tab" data-bs-toggle="tab" data-bs-target="#hostels-panel" type="button" role="tab" aria-controls="hostels-panel" aria-selected="false">
+            🏢 Hostel Management
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings-panel" type="button" role="tab" aria-controls="settings-panel" aria-selected="false">
+            ⚙️ Settings & Areas
+          </button>
+        </li>
       </ul>
 
       <!-- Tabs Content -->
@@ -241,6 +251,81 @@
           <!-- Pagination Controls -->
           <div id="allStudentsPagination" class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2"></div>
         </div>
+
+        <!-- Tab 4: Hostel Management -->
+        <div class="tab-pane fade" id="hostels-panel" role="tabpanel" aria-labelledby="hostels-tab">
+          <div class="row g-2 mb-3">
+            <div class="col-12 col-md-8">
+              <input type="text" id="hostelSearchInput" class="form-control" placeholder="Search by Hostel Name, Owner, or Area...">
+            </div>
+            <div class="col-12 col-md-4">
+              <button class="btn btn-primary w-100" id="addHostelBtn" onclick="openAddHostelModal()">➕ Add Hostel</button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 text-nowrap">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col">Hostel Image</th>
+                  <th scope="col">Hostel Name</th>
+                  <th scope="col">Owner Name</th>
+                  <th scope="col">Gender</th>
+                  <th scope="col">Area</th>
+                  <th scope="col">Phone Number</th>
+                  <th scope="col" class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="hostelsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab 5: Settings & Areas -->
+        <div class="tab-pane fade" id="settings-panel" role="tabpanel" aria-labelledby="settings-tab">
+          <div class="row g-4">
+            <!-- Left Side: General Settings -->
+            <div class="col-12 col-md-6">
+              <div class="card p-3 border-0 bg-light" style="border-radius: 12px;">
+                <h3 class="h6 fw-bold mb-3">⏱️ General Settings</h3>
+                <div class="mb-3">
+                  <label for="settingsExpiryDays" class="form-label fw-semibold small">Student Approval Expiry Days</label>
+                  <div class="input-group">
+                    <input type="number" id="settingsExpiryDays" class="form-control" min="1" max="365" value="5">
+                    <button class="btn btn-primary" id="saveExpiryDaysBtn" onclick="saveExpiryDays()">Save</button>
+                  </div>
+                  <div class="form-text">Number of days approval remains valid for a student.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Side: Area Management -->
+            <div class="col-12 col-md-6">
+              <div class="card p-3 border-0 bg-light" style="border-radius: 12px;">
+                <h3 class="h6 fw-bold mb-3">📍 Area Management</h3>
+                <div class="mb-3">
+                  <label for="newAreaName" class="form-label fw-semibold small">Add New Area</label>
+                  <div class="input-group">
+                    <input type="text" id="newAreaName" class="form-control" placeholder="Enter area name...">
+                    <button class="btn btn-primary" id="addAreaBtn" onclick="handleAddArea()">Add</button>
+                  </div>
+                </div>
+
+                <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                  <table class="table table-hover table-sm align-middle mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th scope="col">Area Name</th>
+                        <th scope="col" class="text-end">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="areasTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   </div>
@@ -297,6 +382,122 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
           <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete Student</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Hostel Modal -->
+  <div class="modal fade" id="hostelModal" tabindex="-1" aria-labelledby="hostelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content" style="border-radius: 16px;">
+        <div class="modal-header">
+          <h2 class="modal-title h5 fw-bold" id="hostelModalLabel">Add Hostel</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="hostelForm" onsubmit="handleHostelSubmit(event)">
+          <input type="hidden" id="hostelId">
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label for="hostelNameInput" class="form-label fw-semibold small">Hostel Name</label>
+                <input type="text" id="hostelNameInput" class="form-control" required placeholder="e.g. Sai Boys Hostel">
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="hostelOwnerInput" class="form-label fw-semibold small">Owner Name</label>
+                <input type="text" id="hostelOwnerInput" class="form-control" required placeholder="e.g. Mahesh Shinge">
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="hostelGenderInput" class="form-label fw-semibold small">Gender Type</label>
+                <select id="hostelGenderInput" class="form-select" required>
+                  <option value="Boys">Boys</option>
+                  <option value="Girls">Girls</option>
+                  <option value="Boys & Girls">Boys & Girls</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="hostelAreaInput" class="form-label fw-semibold small">Area / Location</label>
+                <select id="hostelAreaInput" class="form-select" required>
+                  <!-- Dynamically populated from settings areas -->
+                </select>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="hostelPhoneInput" class="form-label fw-semibold small">Phone Number</label>
+                <input type="tel" id="hostelPhoneInput" class="form-control" required placeholder="e.g. +919876543210">
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="hostelMapsInput" class="form-label fw-semibold small">Google Maps Link</label>
+                <input type="url" id="hostelMapsInput" class="form-control" required placeholder="https://maps.app.goo.gl/...">
+              </div>
+              <div class="col-12">
+                <label for="hostelDescriptionInput" class="form-label fw-semibold small">Description (Optional)</label>
+                <textarea id="hostelDescriptionInput" class="form-control" rows="2" placeholder="Describe the hostel facilities, pricing, etc."></textarea>
+              </div>
+              <div class="col-12">
+                <label for="hostelPhotoInput" class="form-label fw-semibold small">Hostel Image Upload (Allowed: JPG, JPEG, PNG, WEBP; Max 5MB)</label>
+                <input type="file" id="hostelPhotoInput" class="form-control" accept="image/jpeg,image/jpg,image/png,image/webp" onchange="previewHostelImage(event)">
+                <div class="form-text text-muted">Large images will be automatically optimized and resized to 1600px width.</div>
+                
+                <!-- Image Preview Panel -->
+                <div id="imagePreviewContainer" class="mt-3 text-center d-none">
+                  <span class="small text-muted d-block mb-1">Image Preview:</span>
+                  <img id="hostelImagePreview" src="" alt="Selected Preview" class="img-thumbnail" style="max-height: 200px; border-radius: 8px;">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="saveHostelBtn">Save Hostel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Hostel Confirmation Modal -->
+  <div class="modal fade" id="deleteHostelConfirmModal" tabindex="-1" aria-labelledby="deleteHostelConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="border-radius: 16px;">
+        <div class="modal-header">
+          <h2 class="modal-title h5 fw-bold text-danger" id="deleteHostelConfirmModalLabel">Confirm Permanent Delete</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-3">Are you sure you want to delete <strong id="deleteHostelNameSpan"></strong>? This will permanently wipe the record and clean up the image file from storage.</p>
+          <div class="form-check text-start">
+            <input class="form-check-input" type="checkbox" id="confirmPermanentDeleteCheck" onchange="toggleHostelDeleteButton()">
+            <label class="form-check-label small fw-semibold text-danger" for="confirmPermanentDeleteCheck">
+              I understand that this action is permanent and cannot be undone.
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteHostelBtn" onclick="submitHostelDeletion()" disabled>Permanently Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Area Modal -->
+  <div class="modal fade" id="editAreaModal" tabindex="-1" aria-labelledby="editAreaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content" style="border-radius: 16px;">
+        <div class="modal-header">
+          <h2 class="modal-title h5 fw-bold" id="editAreaModalLabel">Rename Area</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editAreaOldIndex">
+          <div class="mb-3">
+            <label for="editAreaNameInput" class="form-label fw-semibold small">Area Name</label>
+            <input type="text" id="editAreaNameInput" class="form-control" required placeholder="Enter new name...">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="submitEditArea()">Save Changes</button>
         </div>
       </div>
     </div>
