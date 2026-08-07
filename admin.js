@@ -267,6 +267,7 @@ export async function approveStudent(studentId) {
     const { data: settings, error: settingsError } = await supabaseClient
       .from('settings')
       .select('expiry_days')
+      .neq('expiry_days', -1)
       .limit(1)
       .maybeSingle();
 
@@ -482,6 +483,7 @@ export async function reapproveStudent(studentId) {
     const { data: settings, error: settingsError } = await supabaseClient
       .from('settings')
       .select('expiry_days')
+      .neq('expiry_days', -1)
       .limit(1)
       .maybeSingle();
 
