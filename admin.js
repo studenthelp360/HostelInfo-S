@@ -1148,10 +1148,10 @@ function renderHostelsTable() {
     const imgUrl = hostel.photo || 'images/placeholder.jpg';
     const tr = document.createElement('tr');
     tr.innerHTML = `
+      <td><strong>${hostel.hostel_name}</strong></td>
       <td>
         <img src="${imgUrl}" alt="${hostel.hostel_name}" style="width: 48px; height: 48px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0;" onerror="this.onerror=null; this.src='images/placeholder.jpg';">
       </td>
-      <td><strong>${hostel.hostel_name}</strong></td>
       <td>${hostel.owner_name}</td>
       <td>${hostel.gender}</td>
       <td>${hostel.area}</td>

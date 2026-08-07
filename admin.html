@@ -48,6 +48,52 @@
       font-weight: bold;
       color: #dc2626; /* Bold red attribute class */
     }
+    
+    /* Sticky Excel-like Data Grid styling */
+    .sticky-table {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: 100%;
+    }
+    .sticky-table thead th {
+      position: sticky;
+      top: 0;
+      background-color: #f8fafc !important;
+      z-index: 11;
+      border-bottom: 2px solid #cbd5e1;
+    }
+    /* Sticky Left (Hostel Name) */
+    .sticky-table th:first-child,
+    .sticky-table td:first-child {
+      position: sticky;
+      left: 0;
+      background-color: #ffffff !important;
+      z-index: 10;
+      border-right: 2px solid #e2e8f0;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+    }
+    /* Sticky Right (Actions) */
+    .sticky-table th:last-child,
+    .sticky-table td:last-child {
+      position: sticky;
+      right: 0;
+      background-color: #ffffff !important;
+      z-index: 10;
+      border-left: 2px solid #e2e8f0;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+    }
+    /* Header corners priority overrides */
+    .sticky-table thead th:first-child {
+      z-index: 12;
+    }
+    .sticky-table thead th:last-child {
+      z-index: 12;
+    }
+    /* Sync bootstrap row hover color for sticky cells */
+    .sticky-table tr:hover td:first-child,
+    .sticky-table tr:hover td:last-child {
+      background-color: #f8fafc !important;
+    }
   </style>
 </head>
 <body>
@@ -263,12 +309,12 @@
             </div>
           </div>
 
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 text-nowrap">
+          <div class="table-responsive-container" style="position: relative; overflow-x: auto; max-height: 600px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 12px;">
+            <table class="table table-hover align-middle mb-0 text-nowrap sticky-table">
               <thead class="table-light">
                 <tr>
-                  <th scope="col">Hostel Image</th>
                   <th scope="col">Hostel Name</th>
+                  <th scope="col">Hostel Image</th>
                   <th scope="col">Owner Name</th>
                   <th scope="col">Gender</th>
                   <th scope="col">Area</th>
