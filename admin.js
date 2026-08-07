@@ -824,6 +824,11 @@ let globalSettings = null;
 let areasList = [];
 let editAreaIndex = -1;
 
+// Modal instances
+let hostelModalInstance = null;
+let deleteHostelModalInstance = null;
+let editAreaModalInstance = null;
+
 // A. --- SETTINGS & AREAS CORE LOGIC ---
 
 // Fetch expiry days and dynamic area list from settings
