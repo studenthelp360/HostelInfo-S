@@ -291,7 +291,7 @@ declare
 begin
   v_admin_email := lower(coalesce(auth.jwt() ->> 'email', 'system'));
   
-  if old.status <> new.status then
+  if old.status <> new.status and new.status <> 'Expired' then
     insert into audit_logs (admin_email, student_id, student_name, action, action_details)
     values (
       v_admin_email,
