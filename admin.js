@@ -863,7 +863,7 @@ export async function loadSettingsAreas() {
     return records.map(r => r.website_name.trim()).filter(Boolean);
   } catch (err) {
     logError("loadSettingsAreas", err);
-    return ["Kasaba Bawada", "Tarabai Park", "Ruikar Colony", "Nagala Park", "Line Bazar"];
+    throw err; // Rethrow to propagate query failure details to caller
   }
 }
 
@@ -1141,7 +1141,7 @@ function renderHostelsTable() {
 }
 
 // Open Add Hostel popup modal
-export function openAddHostelModal() {
+export async function openAddHostelModal() {
   selectedHostelId = null;
   optimizedImageFile = null;
 
@@ -1153,8 +1153,17 @@ export function openAddHostelModal() {
   document.getElementById('imagePreviewContainer').classList.add('d-none');
   document.getElementById('hostelImagePreview').src = '';
 
-  // Synchronize dynamic Area dropdown list
-  populateHostelAreaDropdown();
+  toggleLoader(true, "Loading locations...");
+  try {
+    areasList = await loadSettingsAreas();
+    populateHostelAreaDropdown();
+    toggleLoader(false);
+  } catch (err) {
+    toggleLoader(false);
+    logError("openAddHostelModal", err);
+    showToast("Failed to load locations: " + err.message, "danger");
+    return;
+  }
 
   if (!hostelModalInstance) {
     hostelModalInstance = new bootstrap.Modal(document.getElementById('hostelModal'));
@@ -1163,7 +1172,7 @@ export function openAddHostelModal() {
 }
 
 // Open Edit Hostel popup modal
-export function openEditHostelModal(hostelId) {
+export async function openEditHostelModal(hostelId) {
   const hostel = allHostelsList.find(h => h.id === hostelId);
   if (!hostel) return;
 
@@ -1179,9 +1188,21 @@ export function openEditHostelModal(hostelId) {
   document.getElementById('hostelMapsInput').value = hostel.maps;
   document.getElementById('hostelDescriptionInput').value = hostel.description || '';
   
-  // Set up Area list options and select match
-  populateHostelAreaDropdown();
-  document.getElementById('hostelAreaInput').value = hostel.area;
+  toggleLoader(true, "Loading locations...");
+  try {
+    areasList = await loadSettingsAreas();
+    populateHostelAreaDropdown();
+    const areaInput = document.getElementById('hostelAreaInput');
+    if (areaInput) {
+      areaInput.value = hostel.area;
+    }
+    toggleLoader(false);
+  } catch (err) {
+    toggleLoader(false);
+    logError("openEditHostelModal", err);
+    showToast("Failed to load locations: " + err.message, "danger");
+    return;
+  }
 
   const preview = document.getElementById('hostelImagePreview');
   const container = document.getElementById('imagePreviewContainer');
