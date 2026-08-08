@@ -1361,13 +1361,13 @@ export async function handleHostelSubmit(e) {
 
   const hostelId = document.getElementById('hostelId').value.trim() || null;
 
-  // 3. Duplicate hostel check (Name and Phone)
-  const isDuplicate = allHostelsList.some(h => 
+  // 3. Duplicate hostel check (Phone number must be unique across other records)
+  const isDuplicatePhone = allHostelsList.some(h => 
     h.id !== hostelId && 
-    (h.hostel_name.trim().toLowerCase() === name.toLowerCase() || h.phone.trim() === phone)
+    h.phone.trim() === phone
   );
-  if (isDuplicate) {
-    showToast("A hostel with this name or phone number already exists.", "danger");
+  if (isDuplicatePhone) {
+    showToast("A hostel with this phone number already exists.", "danger");
     return;
   }
 
