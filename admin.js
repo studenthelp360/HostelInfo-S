@@ -1359,9 +1359,11 @@ export async function handleHostelSubmit(e) {
     return;
   }
 
+  const hostelId = document.getElementById('hostelId').value.trim() || null;
+
   // 3. Duplicate hostel check (Name and Phone)
   const isDuplicate = allHostelsList.some(h => 
-    h.id !== selectedHostelId && 
+    h.id !== hostelId && 
     (h.hostel_name.trim().toLowerCase() === name.toLowerCase() || h.phone.trim() === phone)
   );
   if (isDuplicate) {
@@ -1374,7 +1376,7 @@ export async function handleHostelSubmit(e) {
 
   try {
     let photoUrl = null;
-    const currentHostel = selectedHostelId ? allHostelsList.find(h => h.id === selectedHostelId) : null;
+    const currentHostel = hostelId ? allHostelsList.find(h => h.id === hostelId) : null;
     
     // Use existing photo URL if no new file is uploaded
     if (currentHostel) {
@@ -1406,12 +1408,12 @@ export async function handleHostelSubmit(e) {
       description: description
     };
 
-    if (selectedHostelId) {
+    if (hostelId) {
       // Update
       const { error } = await supabaseClient
         .from('hostels')
         .update(payload)
-        .eq('id', selectedHostelId);
+        .eq('id', hostelId);
 
       if (error) throw error;
       showToast("Hostel updated successfully.", "success");
